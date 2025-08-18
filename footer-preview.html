@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Footer Preview - Rmart</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .main-content {
+            flex: 1;
+            padding: 40px 20px;
+            background-color: #f5f5f5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .preview-text {
+            text-align: center;
+            color: #666;
+        }
+        
+        .footer {
+            background: linear-gradient(135deg, #0a2540 0%, #102a4c 100%);
+            padding: 60px 0 30px;
+            color: #ffffff;
+            box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+        
+        .footer::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #e53935, transparent);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        .footer-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr 2fr;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+        
+        .footer-logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #ffffff;
+            margin-bottom: 15px;
+        }
+        
+        .footer-logo span {
+            color: #007AFF;
+        }
+        
+        .footer-description {
+            color: #b0b8c1;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        
+        .social-icons {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .social-icon {
+            color: #b0b8c1;
+            padding: 8px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+        }
+        
+        .social-icon:hover {
+            color: #ffffff;
+            background-color: #e53935;
+            transform: translateY(-2px);
+        }
+        
+        .footer-title {
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #ffffff;
+            position: relative;
+            padding-bottom: 10px;
+            font-size: 16px;
+        }
+        
+        .footer-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 40px;
+            height: 2px;
+            background-color: #e53935;
+        }
+        
+        .footer-link {
+            display: block;
+            color: #b0b8c1;
+            margin-bottom: 10px;
+            font-size: 14px;
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+        
+        .footer-link:hover {
+            color: #e53935;
+        }
+        
+        .newsletter-form {
+            margin-top: 20px;
+        }
+        
+        .newsletter-input {
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            width: 100%;
+            margin-bottom: 12px;
+            background-color: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+        }
+        
+        .newsletter-input::placeholder {
+            color: #b0b8c1;
+        }
+        
+        .newsletter-button {
+            background-color: #e53935;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            width: 100%;
+        }
+        
+        .newsletter-button:hover {
+            background-color: #c62828;
+            transform: translateY(-1px);
+        }
+        
+        .footer-bottom {
+            border-top: 1px solid rgba(176, 184, 193, 0.2);
+            padding-top: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .copyright {
+            color: #b0b8c1;
+            font-size: 14px;
+        }
+        
+        .contact-info {
+            color: #b0b8c1;
+            font-size: 14px;
+        }
+        
+        @media (max-width: 768px) {
+            .footer-grid {
+                grid-template-columns: 1fr;
+                gap: 30px;
+                text-align: center;
+            }
+            
+            .footer-title::after {
+                left: 50%;
+                transform: translateX(-50%);
+            }
+            
+            .footer-bottom {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .social-icons {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-content">
+        <div class="preview-text">
+            <h2>Footer Preview</h2>
+            <p>Scroll down to see the professional footer design</p>
+        </div>
+    </div>
+    
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <!-- Brand Section -->
+                <div>
+                    <div class="footer-logo">
+                        R<span>mart</span>
+                    </div>
+                    <p class="footer-description">
+                        Platform belanja online terpercaya dengan produk berkualitas dan layanan terbaik untuk kebutuhan sehari-hari Anda.
+                    </p>
+                    <div class="social-icons">
+                        <a href="#" class="social-icon">📘</a>
+                        <a href="#" class="social-icon">🐦</a>
+                        <a href="#" class="social-icon">📷</a>
+                        <a href="#" class="social-icon">📺</a>
+                    </div>
+                </div>
+                
+                <!-- Categories -->
+                <div>
+                    <h3 class="footer-title">Kategori</h3>
+                    <a href="#" class="footer-link">Groceries</a>
+                    <a href="#" class="footer-link">Beverages</a>
+                    <a href="#" class="footer-link">Household</a>
+                    <a href="#" class="footer-link">Semua Produk</a>
+                </div>
+                
+                <!-- Services -->
+                <div>
+                    <h3 class="footer-title">Layanan</h3>
+                    <a href="#" class="footer-link">Pusat Bantuan</a>
+                    <a href="#" class="footer-link">Hubungi Kami</a>
+                    <a href="#" class="footer-link">Pengiriman</a>
+                    <a href="#" class="footer-link">Pengembalian</a>
+                </div>
+                
+                <!-- Company -->
+                <div>
+                    <h3 class="footer-title">Perusahaan</h3>
+                    <a href="#" class="footer-link">Tentang Kami</a>
+                    <a href="#" class="footer-link">Karir</a>
+                    <a href="#" class="footer-link">Kebijakan Privasi</a>
+                    <a href="#" class="footer-link">Syarat & Ketentuan</a>
+                </div>
+                
+                <!-- Newsletter -->
+                <div>
+                    <h3 class="footer-title">Newsletter</h3>
+                    <p class="footer-description">
+                        Dapatkan penawaran terbaru dan update produk langsung di email Anda.
+                    </p>
+                    <form class="newsletter-form">
+                        <input type="email" class="newsletter-input" placeholder="Masukkan email Anda" required>
+                        <button type="submit" class="newsletter-button">Berlangganan</button>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <div class="copyright">
+                    © 2025 Rmart. Semua hak dilindungi.
+                </div>
+                <div class="contact-info">
+                    📧 support@rmart.com | 📞 (021) 1234-5678
+                </div>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Add Product</title>
+</head>
+<body>
+    <h1>Test Add Product</h1>
+    <button onclick="testAddProduct()">Test Add Product</button>
+    <div id="result"></div>
+
+    <script>
+        async function testAddProduct() {
+            const productData = {
+                name: "Test Product " + Date.now(),
+                price: 75000,
+                stock: 20,
+                category: "Makanan",
+                image: "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400",
+                images: ["https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400"],
+                description: "Test product description"
+            };
+
+            try {
+                const response = await fetch('http://localhost:8191/api/admin/products', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(productData)
+                });
+
+                const result = await response.json();
+                document.getElementById('result').innerHTML = 
+                    '<h3>Response:</h3><pre>' + JSON.stringify(result, null, 2) + '</pre>';
+                
+                if (result.status) {
+                    alert('SUCCESS: Product added successfully!');
+                } else {
+                    alert('ERROR: ' + result.message);
+                }
+            } catch (error) {
+                document.getElementById('result').innerHTML = 
+                    '<h3>Error:</h3><pre>' + error.message + '</pre>';
+                alert('ERROR: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>
