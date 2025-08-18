@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Category Filter & Search</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #fafafa;
+        }
+        .test-section h2 {
+            color: #1976d2;
+            margin-bottom: 15px;
+        }
+        .test-button {
+            background: #1976d2;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .test-button:hover {
+            background: #1565c0;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 5px;
+            background: #e8f5e8;
+            border-left: 4px solid #4caf50;
+        }
+        .error {
+            background: #ffebee;
+            border-left-color: #f44336;
+        }
+        .loading {
+            background: #fff3e0;
+            border-left-color: #ff9800;
+        }
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .category-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .category-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .product-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+        .search-box {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test Category Filter & Search Features</h1>
+        
+        <!-- Test 1: Get Categories -->
+        <div class="test-section">
+            <h2>1. Test Kategori Produk</h2>
+            <p>Menguji endpoint untuk mendapatkan semua kategori produk</p>
+            <button class="test-button" onclick="testGetCategories()">Get Categories</button>
+            <div id="categories-result" class="result" style="display: none;"></div>
+            <div id="categories-display"></div>
+        </div>
+
+        <!-- Test 2: Search Products -->
+        <div class="test-section">
+            <h2>2. Test Pencarian Produk</h2>
+            <p>Menguji pencarian berdasarkan nama produk dan jenis barang</p>
+            <input type="text" id="search-input" class="search-box" placeholder="Masukkan kata kunci pencarian (contoh: makanan, indomie, susu)">
+            <button class="test-button" onclick="testSearchProducts()">Search Products</button>
+            <div id="search-result" class="result" style="display: none;"></div>
+            <div id="search-display"></div>
+        </div>
+
+        <!-- Test 3: Filter by Category -->
+        <div class="test-section">
+            <h2>3. Test Filter Berdasarkan Kategori</h2>
+            <p>Menguji filter produk berdasarkan kategori yang dipilih</p>
+            <input type="text" id="category-input" class="search-box" placeholder="Masukkan nama kategori (contoh: Makanan, Minuman)">
+            <button class="test-button" onclick="testFilterByCategory()">Filter by Category</button>
+            <div id="filter-result" class="result" style="display: none;"></div>
+            <div id="filter-display"></div>
+        </div>
+
+        <!-- Test 4: Combined Test -->
+        <div class="test-section">
+            <h2>4. Test Kombinasi</h2>
+            <p>Menguji berbagai kombinasi pencarian dan filter</p>
+            <button class="test-button" onclick="testCombined('Makanan')">Filter Makanan</button>
+            <button class="test-button" onclick="testCombined('Minuman')">Filter Minuman</button>
+            <button class="test-button" onclick="testSearchCombined('susu')">Search 'susu'</button>
+            <button class="test-button" onclick="testSearchCombined('indomie')">Search 'indomie'</button>
+            <div id="combined-result" class="result" style="display: none;"></div>
+            <div id="combined-display"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8191/api';
+
+        async function makeRequest(url, method = 'GET', data = null) {
+            try {
+                const options = {
+                    method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                };
+                
+                if (data) {
+                    options.body = JSON.stringify(data);
+                }
+                
+                const response = await fetch(url, options);
+                const result = await response.json();
+                return { success: response.ok, data: result, status: response.status };
+            } catch (error) {
+                return { success: false, error: error.message };
+            }
+        }
+
+        function showResult(elementId, content, isError = false) {
+            const element = document.getElementById(elementId);
+            element.style.display = 'block';
+            element.className = `result ${isError ? 'error' : ''}`;
+            element.innerHTML = content;
+        }
+
+        function showLoading(elementId) {
+            const element = document.getElementById(elementId);
+            element.style.display = 'block';
+            element.className = 'result loading';
+            element.innerHTML = '⏳ Loading...';
+        }
+
+        async function testGetCategories() {
+            showLoading('categories-result');
+            
+            const result = await makeRequest(`${API_BASE}/categories`);
+            
+            if (result.success && result.data.status) {
+                const categories = result.data.data.categories;
+                showResult('categories-result', 
+                    `✅ Berhasil mendapatkan ${categories.length} kategori`);
+                
+                // Display categories
+                const categoriesHtml = categories.map(cat => `
+                    <div class="category-card" onclick="testCategoryClick('${cat.name}')">
+                        <h4>${cat.name}</h4>
+                        <p>ID: ${cat.id}</p>
+                        <small>Klik untuk filter produk</small>
+                    </div>
+                `).join('');
+                
+                document.getElementById('categories-display').innerHTML = `
+                    <div class="category-grid">${categoriesHtml}</div>
+                `;
+            } else {
+                showResult('categories-result', 
+                    `❌ Error: ${result.error || result.data?.message || 'Unknown error'}`, true);
+            }
+        }
+
+        async function testSearchProducts() {
+            const searchTerm = document.getElementById('search-input').value.trim();
+            if (!searchTerm) {
+                showResult('search-result', '❌ Masukkan kata kunci pencarian', true);
+                return;
+            }
+
+            showLoading('search-result');
+            
+            const result = await makeRequest(`${API_BASE}/products?search=${encodeURIComponent(searchTerm)}`);
+            
+            if (result.success && result.data.status) {
+                const products = result.data.data.products;
+                showResult('search-result', 
+                    `✅ Ditemukan ${products.length} produk untuk pencarian "${searchTerm}"`);
+                
+                displayProducts(products, 'search-display');
+            } else {
+                showResult('search-result', 
+                    `❌ Error: ${result.error || result.data?.message || 'Unknown error'}`, true);
+            }
+        }
+
+        async function testFilterByCategory() {
+            const categoryName = document.getElementById('category-input').value.trim();
+            if (!categoryName) {
+                showResult('filter-result', '❌ Masukkan nama kategori', true);
+                return;
+            }
+
+            showLoading('filter-result');
+            
+            const result = await makeRequest(`${API_BASE}/products?category=${encodeURIComponent(categoryName)}`);
+            
+            if (result.success && result.data.status) {
+                const products = result.data.data.products;
+                showResult('filter-result', 
+                    `✅ Ditemukan ${products.length} produk dalam kategori "${categoryName}"`);
+                
+                displayProducts(products, 'filter-display');
+            } else {
+                showResult('filter-result', 
+                    `❌ Error: ${result.error || result.data?.message || 'Unknown error'}`, true);
+            }
+        }
+
+        async function testCombined(category) {
+            showLoading('combined-result');
+            
+            const result = await makeRequest(`${API_BASE}/products?category=${encodeURIComponent(category)}`);
+            
+            if (result.success && result.data.status) {
+                const products = result.data.data.products;
+                showResult('combined-result', 
+                    `✅ Filter kategori "${category}": ${products.length} produk`);
+                
+                displayProducts(products, 'combined-display');
+            } else {
+                showResult('combined-result', 
+                    `❌ Error: ${result.error || result.data?.message || 'Unknown error'}`, true);
+            }
+        }
+
+        async function testSearchCombined(searchTerm) {
+            showLoading('combined-result');
+            
+            const result = await makeRequest(`${API_BASE}/products?search=${encodeURIComponent(searchTerm)}`);
+            
+            if (result.success && result.data.status) {
+                const products = result.data.data.products;
+                showResult('combined-result', 
+                    `✅ Pencarian "${searchTerm}": ${products.length} produk`);
+                
+                displayProducts(products, 'combined-display');
+            } else {
+                showResult('combined-result', 
+                    `❌ Error: ${result.error || result.data?.message || 'Unknown error'}`, true);
+            }
+        }
+
+        async function testCategoryClick(categoryName) {
+            await testCombined(categoryName);
+        }
+
+        function displayProducts(products, containerId) {
+            if (products.length === 0) {
+                document.getElementById(containerId).innerHTML = '<p>Tidak ada produk ditemukan.</p>';
+                return;
+            }
+
+            const productsHtml = products.slice(0, 6).map(product => `
+                <div class="product-card">
+                    <h4>${product.name}</h4>
+                    <p><strong>Harga:</strong> Rp ${product.price?.toLocaleString() || 'N/A'}</p>
+                    <p><strong>Kategori:</strong> ${product.category || 'N/A'}</p>
+                    <p><strong>Stok:</strong> ${product.stock || 0}</p>
+                    ${product.image ? `<img src="${product.image}" alt="${product.name}" style="width: 100%; max-height: 150px; object-fit: cover; border-radius: 5px;">` : ''}
+                </div>
+            `).join('');
+            
+            document.getElementById(containerId).innerHTML = `
+                <div class="product-grid">${productsHtml}</div>
+                ${products.length > 6 ? `<p><em>Menampilkan 6 dari ${products.length} produk</em></p>` : ''}
+            `;
+        }
+
+        // Auto-load categories on page load
+        window.onload = function() {
+            testGetCategories();
+        };
+    </script>
+</body>
+</html>
