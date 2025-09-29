@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Profile Update Fix</title>
+</head>
+<body>
+    <h1>Profile Update Fix Test</h1>
+    
+    <h2>Test Steps:</h2>
+    <ol>
+        <li>Login with a user (NOT test@example.com)</li>
+        <li>Go to Profile page</li>
+        <li>Update profile data</li>
+        <li>Check console logs for debug info</li>
+        <li>Verify data saves to correct user</li>
+    </ol>
+    
+    <h2>Debug Console Commands:</h2>
+    <pre>
+// Check current token and user
+console.log('Token:', localStorage.getItem('token'));
+console.log('User:', localStorage.getItem('user'));
+
+// Parse token to see user ID
+const token = localStorage.getItem('token');
+if (token && token.startsWith('session_')) {
+    const parts = token.split('_');
+    console.log('Token parts:', parts);
+    console.log('User ID from token:', parts[1]);
+}
+    </pre>
+    
+    <h2>Expected Behavior:</h2>
+    <ul>
+        <li>✅ Token should contain correct user ID</li>
+        <li>✅ Backend should extract correct user ID</li>
+        <li>✅ Update should target the logged-in user</li>
+        <li>✅ No fallback to test@example.com</li>
+    </ul>
+    
+    <script>
+        console.log('=== PROFILE FIX TEST ===');
+        console.log('Current token:', localStorage.getItem('token'));
+        console.log('Current user:', localStorage.getItem('user'));
+        
+        const token = localStorage.getItem('token');
+        if (token && token.startsWith('session_')) {
+            const parts = token.split('_');
+            console.log('Token user ID:', parts[1]);
+        }
+    </script>
+</body>
+</html>

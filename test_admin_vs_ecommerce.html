@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Admin vs Ecommerce Products</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { display: flex; gap: 20px; }
+        .column { flex: 1; border: 1px solid #ddd; padding: 15px; border-radius: 5px; }
+        .product { border: 1px solid #eee; padding: 10px; margin: 5px 0; border-radius: 3px; }
+        .error { color: red; }
+        .success { color: green; }
+        .warning { color: orange; }
+        button { padding: 10px 15px; margin: 5px; background: #007AFF; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        .stats { background: #f5f5f5; padding: 10px; margin: 10px 0; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Admin Dashboard vs Ecommerce Products Comparison</h1>
+    
+    <button onclick="testBothAPIs()">Test Both APIs</button>
+    <button onclick="compareProducts()">Compare Products</button>
+    
+    <div id="stats"></div>
+    
+    <div class="container">
+        <div class="column">
+            <h2>Admin Dashboard Products</h2>
+            <div id="admin-results">Click "Test Both APIs" to load...</div>
+        </div>
+        <div class="column">
+            <h2>Ecommerce Products</h2>
+            <div id="ecommerce-results">Click "Test Both APIs" to load...</div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8191/api';
+        let adminProducts = [];
+        let ecommerceProducts = [];
+        
+        async function testBothAPIs() {
+            document.getElementById('admin-results').innerHTML = '<p>Loading admin products...</p>';
+            document.getElementById('ecommerce-results').innerHTML = '<p>Loading ecommerce products...</p>';
+            
+            // Test Admin API
+            try {
+                const adminResponse = await fetch(`${API_BASE}/admin/products`);
+                const adminData = await adminResponse.json();
+                
+                if (adminData.status && adminData.data && adminData.data.products) {
+                    adminProducts = adminData.data.products;
+                    displayProducts(adminProducts, 'admin-results', 'Admin');
+                } else {
+                    document.getElementById('admin-results').innerHTML = '<p class="error">Failed to load admin products</p>';
+                }
+            } catch (error) {
+                document.getElementById('admin-results').innerHTML = `<p class="error">Admin API Error: ${error.message}</p>`;
+            }
+            
+            // Test Ecommerce API
+            try {
+                const ecommerceResponse = await fetch(`${API_BASE}/products`);
+                const ecommerceData = await ecommerceResponse.json();
+                
+                if (ecommerceData.status && ecommerceData.data && ecommerceData.data.products) {
+                    ecommerceProducts = ecommerceData.data.products;
+                    displayProducts(ecommerceProducts, 'ecommerce-results', 'Ecommerce');
+                } else {
+                    document.getElementById('ecommerce-results').innerHTML = '<p class="error">Failed to load ecommerce products</p>';
+                }
+            } catch (error) {
+                document.getElementById('ecommerce-results').innerHTML = `<p class="error">Ecommerce API Error: ${error.message}</p>`;
+            }
+            
+            // Update stats
+            updateStats();
+        }
+        
+        function displayProducts(products, containerId, source) {
+            let html = `<h3>${source} Products (${products.length} total)</h3>`;
+            
+            products.slice(0, 5).forEach(product => {
+                html += `
+                    <div class="product">
+                        <h4>${product.name}</h4>
+                        <p><strong>ID:</strong> ${product.id}</p>
+                        <p><strong>Price:</strong> Rp ${product.price.toLocaleString ? product.price.toLocaleString() : product.price}</p>
+                        <p><strong>Stock:</strong> ${product.stock || 0}</p>
+                        <p><strong>Category:</strong> ${product.category || 'N/A'}</p>
+                        <p><strong>Category ID:</strong> ${product.categoryId || 'N/A'}</p>
+                        ${product.rating ? `<p><strong>Rating:</strong> ${product.rating}</p>` : ''}
+                        ${product.sold ? `<p><strong>Sold:</strong> ${product.sold}</p>` : ''}
+                    </div>
+                `;
+            });
+            
+            if (products.length > 5) {
+                html += `<p><em>... and ${products.length - 5} more products</em></p>`;
+            }
+            
+            document.getElementById(containerId).innerHTML = html;
+        }
+        
+        function updateStats() {
+            const statsHtml = `
+                <div class="stats">
+                    <h3>Comparison Stats</h3>
+                    <p><strong>Admin Products:</strong> ${adminProducts.length}</p>
+                    <p><strong>Ecommerce Products:</strong> ${ecommerceProducts.length}</p>
+                    <p class="${adminProducts.length === ecommerceProducts.length ? 'success' : 'warning'}">
+                        <strong>Status:</strong> ${adminProducts.length === ecommerceProducts.length ? 'SYNCED ✅' : 'NOT SYNCED ⚠️'}
+                    </p>
+                </div>
+            `;
+            document.getElementById('stats').innerHTML = statsHtml;
+        }
+        
+        function compareProducts() {
+            if (adminProducts.length === 0 || ecommerceProducts.length === 0) {
+                alert('Please test both APIs first!');
+                return;
+            }
+            
+            let comparison = '<h3>Product Comparison</h3>';
+            
+            // Find products that exist in both
+            const commonProducts = adminProducts.filter(adminProduct => 
+                ecommerceProducts.some(ecomProduct => 
+                    ecomProduct.name === adminProduct.name
+                )
+            );
+            
+            // Find products only in admin
+            const adminOnlyProducts = adminProducts.filter(adminProduct => 
+                !ecommerceProducts.some(ecomProduct => 
+                    ecomProduct.name === adminProduct.name
+                )
+            );
+            
+            // Find products only in ecommerce
+            const ecommerceOnlyProducts = ecommerceProducts.filter(ecomProduct => 
+                !adminProducts.some(adminProduct => 
+                    adminProduct.name === ecomProduct.name
+                )
+            );
+            
+            comparison += `
+                <div class="stats">
+                    <p><strong>Common Products:</strong> ${commonProducts.length}</p>
+                    <p><strong>Admin Only:</strong> ${adminOnlyProducts.length}</p>
+                    <p><strong>Ecommerce Only:</strong> ${ecommerceOnlyProducts.length}</p>
+                </div>
+            `;
+            
+            if (adminOnlyProducts.length > 0) {
+                comparison += '<h4 class="warning">Products only in Admin:</h4>';
+                adminOnlyProducts.slice(0, 3).forEach(product => {
+                    comparison += `<p>• ${product.name}</p>`;
+                });
+            }
+            
+            if (ecommerceOnlyProducts.length > 0) {
+                comparison += '<h4 class="warning">Products only in Ecommerce:</h4>';
+                ecommerceOnlyProducts.slice(0, 3).forEach(product => {
+                    comparison += `<p>• ${product.name}</p>`;
+                });
+            }
+            
+            document.getElementById('stats').innerHTML = comparison;
+        }
+        
+        // Auto-test on page load
+        window.onload = function() {
+            testBothAPIs();
+        };
+    </script>
+</body>
+</html>

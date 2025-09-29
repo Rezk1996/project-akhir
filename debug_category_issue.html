@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Category Issue</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .section { border: 1px solid #ddd; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .product { border: 1px solid #eee; padding: 10px; margin: 5px 0; border-radius: 3px; background: #f9f9f9; }
+        .error { color: red; }
+        .success { color: green; }
+        .warning { color: orange; }
+        button { padding: 10px 15px; margin: 5px; background: #007AFF; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        .highlight { background: yellow; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>Debug Category Issue</h1>
+    
+    <button onclick="debugCategories()">Debug Categories</button>
+    <button onclick="testProductAPI()">Test Product API</button>
+    <button onclick="testAdminAPI()">Test Admin API</button>
+    
+    <div class="section">
+        <h2>Categories Available</h2>
+        <div id="categories-result">Click "Debug Categories" to load...</div>
+    </div>
+    
+    <div class="section">
+        <h2>Ecommerce Products</h2>
+        <div id="ecommerce-result">Click "Test Product API" to load...</div>
+    </div>
+    
+    <div class="section">
+        <h2>Admin Products</h2>
+        <div id="admin-result">Click "Test Admin API" to load...</div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8191/api';
+        
+        async function debugCategories() {
+            const result = document.getElementById('categories-result');
+            result.innerHTML = '<p>Loading categories...</p>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/categories`);
+                const data = await response.json();
+                
+                if (data.status && data.data) {
+                    let html = `<h3>Found ${data.data.length} categories:</h3>`;
+                    data.data.forEach(category => {
+                        html += `
+                            <div class="product">
+                                <strong>ID:</strong> ${category.id} | 
+                                <strong>Name:</strong> ${category.name} | 
+                                <strong>Icon:</strong> ${category.icon || 'N/A'}
+                            </div>
+                        `;
+                    });
+                    result.innerHTML = html;
+                } else {
+                    result.innerHTML = '<p class="error">Failed to load categories</p>';
+                }
+            } catch (error) {
+                result.innerHTML = `<p class="error">Error: ${error.message}</p>`;
+            }
+        }
+        
+        async function testProductAPI() {
+            const result = document.getElementById('ecommerce-result');
+            result.innerHTML = '<p>Loading ecommerce products...</p>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/products`);
+                const data = await response.json();
+                
+                if (data.status && data.data && data.data.products) {
+                    let html = `<h3>Ecommerce Products (${data.data.products.length} total):</h3>`;
+                    data.data.products.slice(0, 5).forEach(product => {
+                        const categoryClass = product.category === 'Unknown' || product.category === 'Uncategorized' ? 'warning' : 'success';
+                        html += `
+                            <div class="product">
+                                <strong>ID:</strong> ${product.id}<br>
+                                <strong>Name:</strong> ${product.name}<br>
+                                <strong>Category ID:</strong> ${product.categoryId || 'NULL'}<br>
+                                <strong>Category:</strong> <span class="${categoryClass}">${product.category || 'N/A'}</span><br>
+                                <strong>Price:</strong> Rp ${product.price.toLocaleString()}
+                            </div>
+                        `;
+                    });
+                    result.innerHTML = html;
+                } else {
+                    result.innerHTML = '<p class="error">Failed to load ecommerce products</p>';
+                }
+            } catch (error) {
+                result.innerHTML = `<p class="error">Error: ${error.message}</p>`;
+            }
+        }
+        
+        async function testAdminAPI() {
+            const result = document.getElementById('admin-result');
+            result.innerHTML = '<p>Loading admin products...</p>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/admin/products`);
+                const data = await response.json();
+                
+                if (data.status && data.data && data.data.products) {
+                    let html = `<h3>Admin Products (${data.data.products.length} total):</h3>`;
+                    data.data.products.slice(0, 5).forEach(product => {
+                        const categoryClass = product.category === 'Unknown' || product.category === 'Uncategorized' ? 'warning' : 'success';
+                        html += `
+                            <div class="product">
+                                <strong>ID:</strong> ${product.id}<br>
+                                <strong>Name:</strong> ${product.name}<br>
+                                <strong>Category ID:</strong> ${product.categoryId || 'NULL'}<br>
+                                <strong>Category:</strong> <span class="${categoryClass}">${product.category || 'N/A'}</span><br>
+                                <strong>Price:</strong> Rp ${product.price.toLocaleString ? product.price.toLocaleString() : product.price}
+                            </div>
+                        `;
+                    });
+                    result.innerHTML = html;
+                } else {
+                    result.innerHTML = '<p class="error">Failed to load admin products</p>';
+                }
+            } catch (error) {
+                result.innerHTML = `<p class="error">Error: ${error.message}</p>`;
+            }
+        }
+        
+        // Auto-load on page load
+        window.onload = function() {
+            debugCategories();
+            setTimeout(testProductAPI, 500);
+            setTimeout(testAdminAPI, 1000);
+        };
+    </script>
+</body>
+</html>

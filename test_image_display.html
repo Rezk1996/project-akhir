@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>R-Mart Image Display Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .test-section h3 {
+            color: #333;
+            margin-top: 0;
+        }
+        .image-test {
+            display: inline-block;
+            margin: 10px;
+            text-align: center;
+            border: 1px solid #ccc;
+            padding: 10px;
+            border-radius: 5px;
+            background: #fafafa;
+        }
+        .image-test img {
+            max-width: 200px;
+            max-height: 150px;
+            border: 1px solid #ddd;
+        }
+        .image-test p {
+            margin: 5px 0;
+            font-size: 12px;
+            color: #666;
+        }
+        .status {
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-weight: bold;
+            margin: 5px 0;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .product-card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 10px;
+            background: white;
+        }
+        .product-card img {
+            width: 100%;
+            height: 150px;
+            object-fit: contain;
+            border: 1px solid #eee;
+        }
+        .product-card h4 {
+            margin: 10px 0 5px 0;
+            font-size: 14px;
+        }
+        .product-card .price {
+            color: #007AFF;
+            font-weight: bold;
+        }
+        .debug-info {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🛒 R-Mart Image Display Test</h1>
+        <p>Testing image display from backend server (http://localhost:8191)</p>
+        
+        <div class="test-section">
+            <h3>1. Direct Image URL Tests</h3>
+            <div class="image-test">
+                <img src="http://localhost:8191/uploads/images/1756729771820_test-upload.jpg" 
+                     alt="Test Upload" 
+                     onerror="this.style.border='2px solid red'; this.nextElementSibling.innerHTML='❌ Failed to load';">
+                <p>Direct URL: /uploads/images/1756729771820_test-upload.jpg</p>
+            </div>
+            
+            <div class="image-test">
+                <img src="http://localhost:8191/uploads/images/test-image.txt" 
+                     alt="Test Text File" 
+                     onerror="this.style.border='2px solid red'; this.nextElementSibling.innerHTML='❌ Failed to load (expected)';">
+                <p>Text file (should fail): /uploads/images/test-image.txt</p>
+            </div>
+            
+            <div class="image-test">
+                <img src="https://via.placeholder.com/200x150/007AFF/white?text=Placeholder" 
+                     alt="Placeholder">
+                <p>External placeholder (should work)</p>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h3>2. Backend API Status</h3>
+            <div id="backend-status" class="status info">Checking backend...</div>
+            <div id="debug-info" class="debug-info"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>3. Products from API</h3>
+            <div id="products-status" class="status info">Loading products...</div>
+            <div id="products-grid" class="product-grid"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>4. Image Processing Test</h3>
+            <div id="image-processing-test">
+                <p>Testing different image URL formats:</p>
+                <div id="url-tests"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Test backend connectivity
+        async function testBackend() {
+            try {
+                const response = await fetch('http://localhost:8191/uploads/test');
+                const text = await response.text();
+                document.getElementById('backend-status').className = 'status success';
+                document.getElementById('backend-status').textContent = '✅ Backend is running: ' + text;
+                
+                // Test debug endpoint
+                const debugResponse = await fetch('http://localhost:8191/uploads/debug/1756729771820_test-upload.jpg');
+                const debugData = await debugResponse.json();
+                document.getElementById('debug-info').textContent = JSON.stringify(debugData, null, 2);
+                
+            } catch (error) {
+                document.getElementById('backend-status').className = 'status error';
+                document.getElementById('backend-status').textContent = '❌ Backend not accessible: ' + error.message;
+            }
+        }
+        
+        // Test products API
+        async function testProducts() {
+            try {
+                const response = await fetch('http://localhost:8191/api/products');
+                const data = await response.json();
+                
+                if (data.status && data.data && data.data.products) {
+                    const products = data.data.products.slice(0, 6); // First 6 products
+                    document.getElementById('products-status').className = 'status success';
+                    document.getElementById('products-status').textContent = `✅ Loaded ${products.length} products`;
+                    
+                    const grid = document.getElementById('products-grid');
+                    grid.innerHTML = products.map(product => `
+                        <div class="product-card">
+                            <img src="${product.image}" 
+                                 alt="${product.name}"
+                                 onerror="this.style.border='2px solid red'; this.src='https://via.placeholder.com/200x150/f8f9fa/6c757d?text=No+Image';">
+                            <h4>${product.name}</h4>
+                            <div class="price">Rp ${product.price.toLocaleString()}</div>
+                            <small>Image URL: ${product.image}</small>
+                        </div>
+                    `).join('');
+                } else {
+                    document.getElementById('products-status').className = 'status error';
+                    document.getElementById('products-status').textContent = '❌ No products found';
+                }
+            } catch (error) {
+                document.getElementById('products-status').className = 'status error';
+                document.getElementById('products-status').textContent = '❌ Products API error: ' + error.message;
+            }
+        }
+        
+        // Test different URL formats
+        function testImageUrls() {
+            const testUrls = [
+                'http://localhost:8191/uploads/images/1756729771820_test-upload.jpg',
+                '/uploads/images/1756729771820_test-upload.jpg',
+                '1756729771820_test-upload.jpg',
+                'https://via.placeholder.com/150x100/007AFF/white?text=External'
+            ];
+            
+            const container = document.getElementById('url-tests');
+            container.innerHTML = testUrls.map((url, index) => `
+                <div class="image-test">
+                    <img src="${url}" 
+                         alt="Test ${index + 1}"
+                         onerror="this.style.border='2px solid red';">
+                    <p>Format ${index + 1}: ${url}</p>
+                </div>
+            `).join('');
+        }
+        
+        // Run tests when page loads
+        window.onload = function() {
+            testBackend();
+            testProducts();
+            testImageUrls();
+        };
+        
+        // Auto-refresh every 30 seconds
+        setInterval(() => {
+            testBackend();
+            testProducts();
+        }, 30000);
+    </script>
+</body>
+</html>

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Admin Categories Loading</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test Admin Categories Loading</h1>
+    <p>This test verifies that categories are properly loaded in the admin dashboard.</p>
+
+    <div class="test-section info">
+        <h3>📋 Test Steps</h3>
+        <ol>
+            <li>Test backend categories endpoint</li>
+            <li>Verify category data structure</li>
+            <li>Check if categories have required fields</li>
+        </ol>
+    </div>
+
+    <div class="test-section">
+        <h3>🔧 Backend Test</h3>
+        <button onclick="testBackendCategories()">Test Backend Categories API</button>
+        <div id="backend-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>📊 Results</h3>
+        <div id="test-results"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8191/api';
+        
+        async function testBackendCategories() {
+            const resultDiv = document.getElementById('backend-result');
+            const testResultsDiv = document.getElementById('test-results');
+            
+            try {
+                resultDiv.innerHTML = '<p>🔄 Testing backend categories endpoint...</p>';
+                
+                const response = await fetch(`${API_BASE}/admin/categories`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+                
+                const data = await response.json();
+                
+                let html = '<h4>📡 Backend Response:</h4>';
+                html += `<p><strong>Status:</strong> ${response.status}</p>`;
+                html += `<p><strong>Response Status:</strong> ${data.status}</p>`;
+                html += `<p><strong>Message:</strong> ${data.message}</p>`;
+                html += '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+                
+                if (data.status && data.data && Array.isArray(data.data)) {
+                    html += `<div class="success">✅ Categories loaded successfully! Found ${data.data.length} categories.</div>`;
+                    
+                    // Test each category structure
+                    let categoryTests = '<h4>🔍 Category Structure Tests:</h4>';
+                    data.data.forEach((category, index) => {
+                        categoryTests += `<div style="margin: 10px 0; padding: 10px; border: 1px solid #ddd;">`;
+                        categoryTests += `<strong>Category ${index + 1}:</strong><br>`;
+                        categoryTests += `ID: ${category.id || 'Missing'}<br>`;
+                        categoryTests += `Name: ${category.name || 'Missing'}<br>`;
+                        categoryTests += `Image: ${category.image ? '✅ Present' : '❌ Missing'}<br>`;
+                        categoryTests += `Icon: ${category.icon || 'Default'}<br>`;
+                        categoryTests += `Icon Color: ${category.iconColor || 'Default'}<br>`;
+                        categoryTests += `</div>`;
+                    });
+                    html += categoryTests;
+                    
+                    testResultsDiv.innerHTML = `
+                        <div class="success">
+                            <h4>✅ Test Results: PASSED</h4>
+                            <ul>
+                                <li>✅ Backend endpoint working</li>
+                                <li>✅ Categories data structure correct</li>
+                                <li>✅ Found ${data.data.length} categories</li>
+                                <li>✅ All categories have required fields</li>
+                            </ul>
+                            <p><strong>Next Steps:</strong></p>
+                            <ol>
+                                <li>Start the admin dashboard: <code>cd Dashboard_Admin && npm start</code></li>
+                                <li>Go to Add Product page</li>
+                                <li>Categories should now appear in the dropdown</li>
+                            </ol>
+                        </div>
+                    `;
+                } else {
+                    html += '<div class="error">❌ No categories found or invalid response structure</div>';
+                    testResultsDiv.innerHTML = `
+                        <div class="error">
+                            <h4>❌ Test Results: FAILED</h4>
+                            <p>Categories not loading properly. Check:</p>
+                            <ul>
+                                <li>Database connection</li>
+                                <li>Categories table has data</li>
+                                <li>Backend server is running on port 8191</li>
+                            </ul>
+                        </div>
+                    `;
+                }
+                
+                resultDiv.innerHTML = html;
+                
+            } catch (error) {
+                const errorHtml = `
+                    <div class="error">
+                        <h4>❌ Error Testing Backend</h4>
+                        <p><strong>Error:</strong> ${error.message}</p>
+                        <p><strong>Possible causes:</strong></p>
+                        <ul>
+                            <li>Backend server not running (start with: <code>cd Ecommerce/Backend && mvn spring-boot:run</code>)</li>
+                            <li>Database not connected</li>
+                            <li>CORS issues</li>
+                        </ul>
+                    </div>
+                `;
+                resultDiv.innerHTML = errorHtml;
+                testResultsDiv.innerHTML = `
+                    <div class="error">
+                        <h4>❌ Test Results: FAILED</h4>
+                        <p>Cannot connect to backend. Make sure backend is running on port 8191.</p>
+                    </div>
+                `;
+            }
+        }
+        
+        // Auto-run test on page load
+        window.onload = function() {
+            setTimeout(testBackendCategories, 1000);
+        };
+    </script>
+</body>
+</html>

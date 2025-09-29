@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guest Cart Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; }
+        button { margin: 5px; padding: 10px; }
+        .result { background: #f5f5f5; padding: 10px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>🛒 Guest Cart Functionality Test</h1>
+    
+    <div class="test-section">
+        <h3>Test 1: Add Items to Guest Cart</h3>
+        <button onclick="addTestItem()">Add Test Product</button>
+        <button onclick="viewGuestCart()">View Guest Cart</button>
+        <div id="guestCartResult" class="result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>Test 2: Simulate Login & Cart Sync</h3>
+        <button onclick="simulateLogin()">Simulate Login</button>
+        <button onclick="checkSyncResult()">Check Sync Result</button>
+        <div id="syncResult" class="result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>Test 3: Clear All Data</h3>
+        <button onclick="clearAllData()">Clear All Cart Data</button>
+        <div id="clearResult" class="result"></div>
+    </div>
+
+    <script>
+        let testProductId = 1;
+        
+        function addTestItem() {
+            const testProduct = {
+                id: testProductId++,
+                productId: testProductId,
+                name: `Test Product ${testProductId}`,
+                price: 25000,
+                quantity: 1,
+                image: 'test.jpg',
+                stock: 100
+            };
+            
+            // Get existing cart
+            let cart = [];
+            const existingCart = localStorage.getItem('guestCart');
+            if (existingCart) {
+                cart = JSON.parse(existingCart);
+            }
+            
+            // Add new item
+            cart.push(testProduct);
+            
+            // Save to localStorage
+            localStorage.setItem('guestCart', JSON.stringify(cart));
+            localStorage.setItem('guestCartTimestamp', Date.now().toString());
+            
+            document.getElementById('guestCartResult').innerHTML = 
+                `✅ Added: ${testProduct.name}<br>Cart now has ${cart.length} items`;
+        }
+        
+        function viewGuestCart() {
+            const cart = localStorage.getItem('guestCart');
+            const timestamp = localStorage.getItem('guestCartTimestamp');
+            
+            if (cart) {
+                const items = JSON.parse(cart);
+                const timeStr = timestamp ? new Date(parseInt(timestamp)).toLocaleString() : 'Unknown';
+                
+                let html = `<strong>Guest Cart (${items.length} items)</strong><br>`;
+                html += `Last updated: ${timeStr}<br><br>`;
+                
+                items.forEach(item => {
+                    html += `• ${item.name} - Rp ${item.price.toLocaleString()} (Qty: ${item.quantity})<br>`;
+                });
+                
+                document.getElementById('guestCartResult').innerHTML = html;
+            } else {
+                document.getElementById('guestCartResult').innerHTML = '❌ No guest cart found';
+            }
+        }
+        
+        function simulateLogin() {
+            // Simulate user login by setting auth data
+            const mockUser = {
+                id: 123,
+                name: 'Test User',
+                email: 'test@example.com'
+            };
+            
+            const mockToken = 'mock-jwt-token-' + Date.now();
+            const expiration = Date.now() + (24 * 60 * 60 * 1000); // 24 hours
+            
+            localStorage.setItem('user', JSON.stringify(mockUser));
+            localStorage.setItem('token', mockToken);
+            localStorage.setItem('tokenExpiration', expiration.toString());
+            
+            document.getElementById('syncResult').innerHTML = 
+                `✅ Simulated login for: ${mockUser.name}<br>Token: ${mockToken.substring(0, 20)}...`;
+        }
+        
+        function checkSyncResult() {
+            const user = localStorage.getItem('user');
+            const token = localStorage.getItem('token');
+            const guestCart = localStorage.getItem('guestCart');
+            
+            let html = '<strong>Sync Check Results:</strong><br>';
+            html += `User: ${user ? '✅ Present' : '❌ Missing'}<br>`;
+            html += `Token: ${token ? '✅ Present' : '❌ Missing'}<br>`;
+            html += `Guest Cart: ${guestCart ? '✅ Present' : '❌ Missing'}<br><br>`;
+            
+            if (user && token && guestCart) {
+                const userData = JSON.parse(user);
+                const cartItems = JSON.parse(guestCart);
+                
+                html += `<strong>Ready for Sync:</strong><br>`;
+                html += `User: ${userData.name} (ID: ${userData.id})<br>`;
+                html += `Cart Items: ${cartItems.length}<br>`;
+                html += `<em>In real app, these items would be synced to user's database cart</em>`;
+            } else {
+                html += '❌ Not ready for sync - missing required data';
+            }
+            
+            document.getElementById('syncResult').innerHTML = html;
+        }
+        
+        function clearAllData() {
+            // Clear all cart and auth related data
+            const keysToRemove = [
+                'guestCart',
+                'guestCartTimestamp', 
+                'user',
+                'token',
+                'tokenExpiration'
+            ];
+            
+            keysToRemove.forEach(key => {
+                localStorage.removeItem(key);
+            });
+            
+            // Also clear any user-specific guest carts
+            Object.keys(localStorage).forEach(key => {
+                if (key.startsWith('guestCart_')) {
+                    localStorage.removeItem(key);
+                }
+            });
+            
+            document.getElementById('clearResult').innerHTML = 
+                '✅ Cleared all cart and auth data from localStorage';
+        }
+        
+        // Auto-load current state on page load
+        window.onload = function() {
+            viewGuestCart();
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simple Login Test</title>
+</head>
+<body>
+    <h1>Simple Login Test</h1>
+    <button onclick="testLogin()">Test Login</button>
+    <div id="result"></div>
+
+    <script>
+        async function testLogin() {
+            const resultDiv = document.getElementById('result');
+            
+            try {
+                const response = await fetch('http://localhost:8191/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    mode: 'cors',
+                    body: JSON.stringify({
+                        email: 'customer@example.com',
+                        password: 'customer123'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.status) {
+                    localStorage.setItem('token', data.data.token);
+                    localStorage.setItem('user', JSON.stringify(data.data.user));
+                    localStorage.setItem('tokenExpiration', (Date.now() + data.data.expiresIn * 1000).toString());
+                    
+                    resultDiv.innerHTML = `
+                        <h3>Login Success!</h3>
+                        <p>User: ${data.data.user.name}</p>
+                        <p>Token stored in localStorage</p>
+                        <button onclick="window.location.href='http://localhost:3000'">Go to App</button>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<h3>Login Failed: ${data.message}</h3>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<h3>Network Error: ${error.message}</h3>`;
+                console.error('Error:', error);
+            }
+        }
+    </script>
+</body>
+</html>

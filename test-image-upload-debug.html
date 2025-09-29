@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Upload Debug - R-Mart</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        .header h1 {
+            color: #667eea;
+            margin: 0;
+            font-size: 2.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+        .upload-section {
+            background: #f8fafc;
+            border: 2px dashed #667eea;
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 30px;
+            transition: all 0.3s ease;
+        }
+        .upload-section:hover {
+            border-color: #764ba2;
+            background: #f1f5f9;
+        }
+        .upload-section.dragover {
+            border-color: #4c63d2;
+            background: #e0e7ff;
+        }
+        .file-input {
+            display: none;
+        }
+        .upload-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px;
+        }
+        .upload-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+        .upload-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+        .result-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+        .result-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        .result-card.success {
+            border-left: 4px solid #10b981;
+        }
+        .result-card.error {
+            border-left: 4px solid #ef4444;
+        }
+        .result-card.uploading {
+            border-left: 4px solid #f59e0b;
+        }
+        .image-preview {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        .status-badge.success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .status-badge.error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        .status-badge.uploading {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #e5e7eb;
+            border-radius: 3px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+        .image-info {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-bottom: 10px;
+        }
+        .uploaded-image {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 2px solid #10b981;
+            margin-top: 10px;
+        }
+        .uploaded-image.error {
+            border-color: #ef4444;
+        }
+        .path-info {
+            background: #f3f4f6;
+            padding: 10px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.75rem;
+            word-break: break-all;
+            margin-top: 10px;
+        }
+        .test-controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .clear-btn {
+            background: #6b7280;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .clear-btn:hover {
+            background: #4b5563;
+        }
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin: 20px 0;
+            padding: 20px;
+            background: #f8fafc;
+            border-radius: 12px;
+        }
+        .stat-item {
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+        .stat-label {
+            color: #6b7280;
+            font-size: 0.875rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📸 Image Upload Debug Test</h1>
+            <p>Test gambar upload untuk memastikan fitur upload berfungsi dengan benar</p>
+        </div>
+
+        <div class="upload-section" id="uploadSection">
+            <div style="font-size: 3rem; margin-bottom: 20px;">📤</div>
+            <h3>Drag & Drop Images atau Klik untuk Upload</h3>
+            <p>Mendukung format: JPG, PNG, GIF, WebP</p>
+            <input type="file" id="fileInput" class="file-input" multiple accept="image/*">
+            <button class="upload-btn" onclick="document.getElementById('fileInput').click()">
+                Pilih Gambar
+            </button>
+            <button class="upload-btn" onclick="testSampleImages()">
+                Test Sample Images
+            </button>
+        </div>
+
+        <div class="test-controls">
+            <button class="clear-btn" onclick="clearResults()">Clear Results</button>
+            <button class="clear-btn" onclick="testAllUploaded()">Test All Uploaded</button>
+        </div>
+
+        <div class="stats" id="stats">
+            <div class="stat-item">
+                <div class="stat-number" id="totalUploads">0</div>
+                <div class="stat-label">Total Uploads</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="successCount">0</div>
+                <div class="stat-label">Successful</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="errorCount">0</div>
+                <div class="stat-label">Failed</div>
+            </div>
+        </div>
+
+        <div class="results-grid" id="resultsGrid"></div>
+    </div>
+
+    <script>
+        let uploadResults = [];
+        let uploadCounter = 0;
+
+        // Drag and drop functionality
+        const uploadSection = document.getElementById('uploadSection');
+        const fileInput = document.getElementById('fileInput');
+
+        uploadSection.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadSection.classList.add('dragover');
+        });
+
+        uploadSection.addEventListener('dragleave', () => {
+            uploadSection.classList.remove('dragover');
+        });
+
+        uploadSection.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadSection.classList.remove('dragover');
+            const files = Array.from(e.dataTransfer.files).filter(file => file.type.startsWith('image/'));
+            handleFiles(files);
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            const files = Array.from(e.target.files);
+            handleFiles(files);
+        });
+
+        function handleFiles(files) {
+            files.forEach(file => {
+                const result = {
+                    id: ++uploadCounter,
+                    file: file,
+                    status: 'uploading',
+                    message: 'Preparing upload...',
+                    preview: URL.createObjectURL(file),
+                    uploadedPath: null,
+                    progress: 0
+                };
+                
+                uploadResults.push(result);
+                renderResult(result);
+                uploadImage(result);
+            });
+            updateStats();
+        }
+
+        async function uploadImage(result) {
+            const formData = new FormData();
+            formData.append('file', result.file);
+
+            try {
+                // Simulate progress
+                const progressInterval = setInterval(() => {
+                    if (result.progress < 90) {
+                        result.progress += Math.random() * 20;
+                        updateResultProgress(result);
+                    }
+                }, 200);
+
+                const response = await fetch('http://localhost:8191/api/admin/upload/image', {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                clearInterval(progressInterval);
+                result.progress = 100;
+
+                const data = await response.json();
+                
+                if (data.status) {
+                    result.status = 'success';
+                    result.message = 'Upload berhasil!';
+                    result.uploadedPath = data.data.imagePath;
+                    
+                    // Test image accessibility
+                    setTimeout(() => testImageAccess(result), 1000);
+                } else {
+                    result.status = 'error';
+                    result.message = data.message || 'Upload gagal';
+                }
+            } catch (error) {
+                result.status = 'error';
+                result.message = `Network error: ${error.message}`;
+                result.progress = 0;
+            }
+
+            updateResult(result);
+            updateStats();
+        }
+
+        function testImageAccess(result) {
+            if (!result.uploadedPath) return;
+            
+            const testUrl = `http://localhost:8191${result.uploadedPath}`;
+            const img = new Image();
+            
+            img.onload = () => {
+                result.message = 'Upload berhasil & gambar dapat diakses!';
+                updateResult(result);
+            };
+            
+            img.onerror = () => {
+                result.status = 'error';
+                result.message = 'Upload berhasil tapi gambar tidak dapat diakses!';
+                updateResult(result);
+                updateStats();
+            };
+            
+            img.src = testUrl;
+        }
+
+        function renderResult(result) {
+            const resultsGrid = document.getElementById('resultsGrid');
+            const resultCard = document.createElement('div');
+            resultCard.className = `result-card ${result.status}`;
+            resultCard.id = `result-${result.id}`;
+            
+            resultCard.innerHTML = `
+                <img src="${result.preview}" alt="Preview" class="image-preview">
+                <div class="status-badge ${result.status}">${result.status.toUpperCase()}</div>
+                <div class="image-info">
+                    <strong>${result.file.name}</strong><br>
+                    Size: ${(result.file.size / 1024).toFixed(1)} KB<br>
+                    Type: ${result.file.type}
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: ${result.progress}%"></div>
+                </div>
+                <div class="message">${result.message}</div>
+                ${result.uploadedPath ? `
+                    <div class="path-info">Path: ${result.uploadedPath}</div>
+                    <img src="http://localhost:8191${result.uploadedPath}" 
+                         alt="Uploaded" class="uploaded-image"
+                         onerror="this.classList.add('error'); this.alt='Failed to load';">
+                ` : ''}
+            `;
+            
+            resultsGrid.appendChild(resultCard);
+        }
+
+        function updateResult(result) {
+            const resultCard = document.getElementById(`result-${result.id}`);
+            if (!resultCard) return;
+            
+            resultCard.className = `result-card ${result.status}`;
+            resultCard.querySelector('.status-badge').textContent = result.status.toUpperCase();
+            resultCard.querySelector('.status-badge').className = `status-badge ${result.status}`;
+            resultCard.querySelector('.message').textContent = result.message;
+            resultCard.querySelector('.progress-fill').style.width = `${result.progress}%`;
+            
+            if (result.uploadedPath && !resultCard.querySelector('.uploaded-image')) {
+                const pathInfo = document.createElement('div');
+                pathInfo.className = 'path-info';
+                pathInfo.textContent = `Path: ${result.uploadedPath}`;
+                
+                const uploadedImg = document.createElement('img');
+                uploadedImg.src = `http://localhost:8191${result.uploadedPath}`;
+                uploadedImg.alt = 'Uploaded';
+                uploadedImg.className = 'uploaded-image';
+                uploadedImg.onerror = function() {
+                    this.classList.add('error');
+                    this.alt = 'Failed to load';
+                };
+                
+                resultCard.appendChild(pathInfo);
+                resultCard.appendChild(uploadedImg);
+            }
+        }
+
+        function updateResultProgress(result) {
+            const resultCard = document.getElementById(`result-${result.id}`);
+            if (resultCard) {
+                resultCard.querySelector('.progress-fill').style.width = `${result.progress}%`;
+            }
+        }
+
+        function updateStats() {
+            const total = uploadResults.length;
+            const success = uploadResults.filter(r => r.status === 'success').length;
+            const error = uploadResults.filter(r => r.status === 'error').length;
+            
+            document.getElementById('totalUploads').textContent = total;
+            document.getElementById('successCount').textContent = success;
+            document.getElementById('errorCount').textContent = error;
+        }
+
+        function clearResults() {
+            uploadResults.forEach(result => URL.revokeObjectURL(result.preview));
+            uploadResults = [];
+            uploadCounter = 0;
+            document.getElementById('resultsGrid').innerHTML = '';
+            updateStats();
+        }
+
+        function testAllUploaded() {
+            uploadResults.filter(r => r.uploadedPath).forEach(result => {
+                testImageAccess(result);
+            });
+        }
+
+        async function testSampleImages() {
+            // Create sample test images
+            const canvas = document.createElement('canvas');
+            canvas.width = 400;
+            canvas.height = 300;
+            const ctx = canvas.getContext('2d');
+            
+            const colors = ['#667eea', '#764ba2', '#10b981', '#f59e0b', '#ef4444'];
+            
+            for (let i = 0; i < 3; i++) {
+                // Create gradient background
+                const gradient = ctx.createLinearGradient(0, 0, 400, 300);
+                gradient.addColorStop(0, colors[i]);
+                gradient.addColorStop(1, colors[i + 1] || colors[0]);
+                
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, 400, 300);
+                
+                // Add text
+                ctx.fillStyle = 'white';
+                ctx.font = 'bold 24px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(`Test Image ${i + 1}`, 200, 150);
+                ctx.font = '16px Arial';
+                ctx.fillText(new Date().toLocaleString(), 200, 180);
+                
+                // Convert to blob and create file
+                canvas.toBlob(blob => {
+                    const file = new File([blob], `test-image-${i + 1}.png`, { type: 'image/png' });
+                    handleFiles([file]);
+                }, 'image/png');
+            }
+        }
+
+        // Initialize
+        console.log('Image Upload Debug Test initialized');
+        updateStats();
+    </script>
+</body>
+</html>

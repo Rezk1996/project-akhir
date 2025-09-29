@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orders API Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .order { 
+            border: 1px solid #ddd; 
+            margin: 10px 0; 
+            padding: 15px; 
+            border-radius: 8px; 
+        }
+        .status { 
+            padding: 4px 8px; 
+            border-radius: 4px; 
+            color: white; 
+            font-size: 12px; 
+        }
+        .pending { background-color: #ff9800; }
+        .processing { background-color: #2196f3; }
+        .shipped { background-color: #4caf50; }
+        .delivered { background-color: #8bc34a; }
+        .cancelled { background-color: #f44336; }
+        .error { color: red; }
+        .success { color: green; }
+    </style>
+</head>
+<body>
+    <h1>Orders Management Test</h1>
+    
+    <div>
+        <button onclick="loadOrders()">Load Orders</button>
+        <button onclick="testOrderStatusUpdate()">Test Status Update</button>
+    </div>
+    
+    <div id="result"></div>
+
+    <script>
+        async function loadOrders() {
+            try {
+                const response = await fetch('http://localhost:8191/api/admin/orders');
+                const data = await response.json();
+                
+                if (data.status && data.data && data.data.orders) {
+                    const orders = data.data.orders;
+                    const html = `
+                        <h2>Orders (${orders.length} total)</h2>
+                        ${orders.map(order => `
+                            <div class="order">
+                                <h3>Order #${order.id}</h3>
+                                <p><strong>Customer:</strong> ${order.userName || 'N/A'} (${order.userEmail || 'N/A'})</p>
+                                <p><strong>Total:</strong> Rp ${order.totalAmount.toLocaleString()}</p>
+                                <p><strong>Status:</strong> <span class="status ${order.status}">${order.status}</span></p>
+                                <p><strong>Payment:</strong> ${order.paymentMethod} (${order.paymentStatus})</p>
+                                <p><strong>Address:</strong> ${order.shippingAddress || 'N/A'}</p>
+                                <p><strong>Phone:</strong> ${order.phoneNumber || 'N/A'}</p>
+                                <p><strong>Created:</strong> ${new Date(order.createdAt).toLocaleString()}</p>
+                                <button onclick="updateOrderStatus(${order.id}, 'processing')">Mark Processing</button>
+                                <button onclick="updateOrderStatus(${order.id}, 'shipped')">Mark Shipped</button>
+                                <button onclick="updateOrderStatus(${order.id}, 'delivered')">Mark Delivered</button>
+                            </div>
+                        `).join('')}
+                    `;
+                    document.getElementById('result').innerHTML = html;
+                } else {
+                    document.getElementById('result').innerHTML = '<div class="error">Failed to load orders: ' + data.message + '</div>';
+                }
+            } catch (error) {
+                document.getElementById('result').innerHTML = '<div class="error">Error: ' + error.message + '</div>';
+            }
+        }
+        
+        async function updateOrderStatus(orderId, newStatus) {
+            try {
+                const response = await fetch(`http://localhost:8191/api/admin/orders/${orderId}/status`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ status: newStatus })
+                });
+                
+                const data = await response.json();
+                
+                if (data.status) {
+                    alert('Order status updated successfully!');
+                    loadOrders(); // Reload orders
+                } else {
+                    alert('Failed to update order status: ' + data.message);
+                }
+            } catch (error) {
+                alert('Error updating order status: ' + error.message);
+            }
+        }
+        
+        async function testOrderStatusUpdate() {
+            // Test updating the first order to 'processing'
+            try {
+                const response = await fetch('http://localhost:8191/api/admin/orders/4/status', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ status: 'processing' })
+                });
+                
+                const data = await response.json();
+                alert(data.status ? 'Test successful!' : 'Test failed: ' + data.message);
+                loadOrders();
+            } catch (error) {
+                alert('Test error: ' + error.message);
+            }
+        }
+        
+        // Load orders when page loads
+        loadOrders();
+    </script>
+</body>
+</html>

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Dashboard Employee Integration</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .success { color: green; }
+        .error { color: red; }
+        .result { background: #f5f5f5; padding: 10px; margin: 10px 0; border-radius: 5px; }
+        button { padding: 10px 15px; margin: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>Dashboard Employee Integration Test</h1>
+    
+    <div>
+        <button onclick="testGetEmployees()">Get Employees</button>
+        <button onclick="testCreateEmployee()">Create Employee</button>
+        <button onclick="testUpdateEmployee()">Update Employee</button>
+        <button onclick="testDeleteEmployee()">Delete Employee</button>
+    </div>
+    
+    <div id="result"></div>
+
+    <script>
+        const API_BASE = 'http://localhost:8191/api';
+        
+        async function makeRequest(url, options = {}) {
+            try {
+                const response = await fetch(url, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...options.headers
+                    },
+                    ...options
+                });
+                
+                const data = await response.json();
+                return { status: response.status, data };
+            } catch (error) {
+                return { error: error.message };
+            }
+        }
+        
+        function displayResult(title, result) {
+            const resultDiv = document.getElementById('result');
+            const statusClass = result.error ? 'error' : (result.status === 200 ? 'success' : 'error');
+            
+            resultDiv.innerHTML = `
+                <div class="result">
+                    <h3>${title}</h3>
+                    <p class="${statusClass}">Status: ${result.status || 'Error'}</p>
+                    <pre>${JSON.stringify(result.data || result.error, null, 2)}</pre>
+                </div>
+            `;
+        }
+        
+        async function testGetEmployees() {
+            const result = await makeRequest(`${API_BASE}/admin/employees`);
+            displayResult('Get Employees', result);
+        }
+        
+        async function testCreateEmployee() {
+            const employeeData = {
+                nama: `Test Employee ${Date.now()}`,
+                phone: "081234567890",
+                position: "Test Position"
+            };
+            
+            const result = await makeRequest(`${API_BASE}/admin/employees`, {
+                method: 'POST',
+                body: JSON.stringify(employeeData)
+            });
+            displayResult('Create Employee', result);
+        }
+        
+        async function testUpdateEmployee() {
+            // First get employees to find an ID
+            const getResult = await makeRequest(`${API_BASE}/admin/employees`);
+            if (getResult.data && getResult.data.data.employees.length > 0) {
+                const employeeId = getResult.data.data.employees[0].id;
+                const updateData = {
+                    nama: "Updated Employee Name",
+                    phone: "081999999999",
+                    position: "Updated Position"
+                };
+                
+                const result = await makeRequest(`${API_BASE}/admin/employees/${employeeId}`, {
+                    method: 'PUT',
+                    body: JSON.stringify(updateData)
+                });
+                displayResult('Update Employee', result);
+            } else {
+                displayResult('Update Employee', { error: 'No employees found to update' });
+            }
+        }
+        
+        async function testDeleteEmployee() {
+            // First get employees to find an ID
+            const getResult = await makeRequest(`${API_BASE}/admin/employees`);
+            if (getResult.data && getResult.data.data.employees.length > 1) {
+                const employeeId = getResult.data.data.employees[getResult.data.data.employees.length - 1].id;
+                
+                const result = await makeRequest(`${API_BASE}/admin/employees/${employeeId}`, {
+                    method: 'DELETE'
+                });
+                displayResult('Delete Employee', result);
+            } else {
+                displayResult('Delete Employee', { error: 'Need at least 2 employees to test delete' });
+            }
+        }
+        
+        // Auto-test on load
+        window.onload = () => {
+            testGetEmployees();
+        };
+    </script>
+</body>
+</html>
